@@ -38,6 +38,7 @@ const DEFAULT_BANKS = [
   { id: 3, name: 'Banco do Brasil', primaryColor: '#FFF100' },
   { id: 10, name: 'Caixa Econômica', primaryColor: '#0066B3' },
   { id: 200, name: 'Banco Inter', primaryColor: '#FF7A00' },
+  { id: 202, name: 'BTG Pactual', primaryColor: '#195AB4' },
 ]
 
 export const ConnectModal: React.FC<ConnectModalProps> = ({

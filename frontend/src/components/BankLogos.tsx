@@ -6,6 +6,7 @@ import bbSvg from '../assets/banks/bb.svg'
 import caixaSvg from '../assets/banks/caixa.svg'
 import santanderSvg from '../assets/banks/santander.svg'
 import interSvg from '../assets/banks/inter.svg'
+import btgSvg from '../assets/banks/btg.svg'
 
 interface BankLogoProps {
   bank: string
@@ -88,6 +89,17 @@ export const BankLogo: React.FC<BankLogoProps> = ({ bank, className = 'w-6 h-6',
         src={interSvg}
         alt={alt || 'Banco Inter'}
         title="Banco Inter"
+        className={`${className} object-contain rounded-md shrink-0 shadow-xs select-none`}
+      />
+    )
+  }
+
+  if (normalized.includes('btg')) {
+    return (
+      <img
+        src={btgSvg}
+        alt={alt || 'BTG Pactual'}
+        title="BTG Pactual"
         className={`${className} object-contain rounded-md shrink-0 shadow-xs select-none`}
       />
     )
