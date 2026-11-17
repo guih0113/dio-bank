@@ -74,6 +74,20 @@ export const BankLogo: React.FC<BankLogoProps> = ({ bank, className = 'w-6 h-6' 
     )
   }
 
+  if (normalized.includes('caixa')) {
+    return (
+      <div
+        className={`${className} rounded-lg bg-[#005CA9] flex items-center justify-center font-black text-white shrink-0 shadow-sm overflow-hidden select-none`}
+        title="Caixa Econômica Federal"
+      >
+        <div className="relative flex items-center justify-center w-full h-full">
+          <span className="text-white font-black text-[12px] italic tracking-tighter">X</span>
+          <span className="absolute w-2 h-0.5 bg-[#F58220] rounded-full rotate-45" />
+        </div>
+      </div>
+    )
+  }
+
   if (normalized.includes('inter')) {
     return (
       <div

@@ -4,7 +4,8 @@ import { Header } from './components/Header'
 import { DashboardView } from './views/DashboardView'
 import { ExtratoView } from './views/ExtratoView'
 import { AssistenteView } from './views/AssistenteView'
-import { ConexoesView, ConfiguracoesView } from './views/OtherViews'
+import { ConexoesView } from './views/ConexoesView'
+import { ConfiguracoesView } from './views/OtherViews'
 import { ConnectModal } from './components/ConnectModal'
 import {
   Account,
