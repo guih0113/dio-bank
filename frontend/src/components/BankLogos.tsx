@@ -61,6 +61,19 @@ export const BankLogo: React.FC<BankLogoProps> = ({ bank, className = 'w-6 h-6' 
     )
   }
 
+  if (normalized.includes('brasil') || normalized.includes('bb')) {
+    return (
+      <div
+        className={`${className} rounded-lg bg-[#FFF100] border border-[#FACC15] flex items-center justify-center text-[#003882] font-black text-[9px] tracking-tight shrink-0 shadow-sm`}
+        title="Banco do Brasil"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+          <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" opacity="0.9" />
+        </svg>
+      </div>
+    )
+  }
+
   if (normalized.includes('inter')) {
     return (
       <div
