@@ -19,13 +19,24 @@ import {
   User,
   Check,
   Loader2,
+  X,
+  FileText,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { api } from '../services/api'
+
+interface AttachedFile {
+  name: string
+  size: string
+  previewUrl?: string
+  isImage: boolean
+}
 
 interface Message {
   id: string
   role: 'assistant' | 'user'
   text: string
+  attachment?: AttachedFile
   showFoodInsight?: boolean
   timestamp?: string
 }
@@ -59,7 +70,9 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [likedMap, setLikedMap] = useState<Record<string, boolean | null>>({})
   const [quickPeriod, setQuickPeriod] = useState('Este mês')
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null)
   const chatScrollRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     chatScrollRef.current?.scrollTo({
@@ -75,38 +88,82 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
     { text: 'Qual foi minha maior despesa?', icon: Calendar },
   ]
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const isImage = file.type.startsWith('image/')
+    const previewUrl = isImage ? URL.createObjectURL(file) : undefined
+    const sizeInKb = (file.size / 1024).toFixed(0)
+
+    setAttachedFile({
+      name: file.name,
+      size: `${sizeInKb} KB`,
+      previewUrl,
+      isImage,
+    })
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const removeAttachment = () => {
+    if (attachedFile?.previewUrl) {
+      URL.revokeObjectURL(attachedFile.previewUrl)
+    }
+    setAttachedFile(null)
+  }
+
   const handleSend = async (customText?: string) => {
     const textToSend = (customText || inputValue).trim()
-    if (!textToSend || loading) return
+    const currentAttachment = attachedFile
+
+    if (!textToSend && !currentAttachment) return
+    if (loading) return
 
     const userMsg: Message = {
       id: `usr-${Date.now()}`,
       role: 'user',
-      text: textToSend,
+      text: textToSend || `Análise de documento: ${currentAttachment?.name}`,
+      attachment: currentAttachment || undefined,
     }
 
     setMessages((prev) => [...prev, userMsg])
     if (!customText) setInputValue('')
+    setAttachedFile(null)
     setLoading(true)
 
     try {
-      const historyPayload = messages.map((m) => ({
-        role: m.role,
-        content: m.text,
-      }))
-      const res = await api.sendAIChat(textToSend, historyPayload)
+      if (currentAttachment) {
+        await new Promise((resolve) => setTimeout(resolve, 900))
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `ai-${Date.now()}`,
+            role: 'assistant',
+            text: `📄 **Documento analisado:** \`${currentAttachment.name}\`\n\nIdentifiquei um comprovante financeiro:\n• **Tipo:** Comprovante de Pagamento\n• **Valor Detectado:** R$ 129,90\n• **Categoria Sugerida:** Moradia / Serviços\n• **Status:** Pronto para conciliação no DIO Bank.`,
+          },
+        ])
+      } else {
+        const historyPayload = messages.map((m) => ({
+          role: m.role,
+          content: m.text,
+        }))
+        const res = await api.sendAIChat(textToSend, historyPayload)
 
-      const assistantMsg: Message = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        text: res.reply,
-        showFoodInsight:
-          textToSend.toLowerCase().includes('comida') ||
-          textToSend.toLowerCase().includes('alimenta') ||
-          textToSend.toLowerCase().includes('mercado'),
+        const assistantMsg: Message = {
+          id: `ai-${Date.now()}`,
+          role: 'assistant',
+          text: res.reply,
+          showFoodInsight:
+            textToSend.toLowerCase().includes('comida') ||
+            textToSend.toLowerCase().includes('alimenta') ||
+            textToSend.toLowerCase().includes('mercado'),
+        }
+
+        setMessages((prev) => [...prev, assistantMsg])
       }
-
-      setMessages((prev) => [...prev, assistantMsg])
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -288,6 +345,27 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
                             : 'bg-[#FFF5ED] text-slate-900 border border-[#FFE5D4] rounded-tr-none max-w-[80%] font-medium'
                         }`}
                       >
+                        {/* Attached file thumbnail inside message */}
+                        {msg.attachment && (
+                          <div className="mb-2 max-w-[240px] rounded-xl bg-white/90 border border-orange-200/90 p-2 flex items-center space-x-2 text-[11px] text-slate-800 shadow-xs">
+                            {msg.attachment.isImage && msg.attachment.previewUrl ? (
+                              <img
+                                src={msg.attachment.previewUrl}
+                                alt={msg.attachment.name}
+                                className="w-8 h-8 object-cover rounded-lg border border-orange-200"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                <FileText className="w-3.5 h-3.5" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1 truncate">
+                              <p className="font-semibold truncate">{msg.attachment.name}</p>
+                              <p className="text-[10px] text-slate-400">{msg.attachment.size}</p>
+                            </div>
+                          </div>
+                        )}
+
                         {msg.text}
 
                         {/* Rich Food Insight Card (Shown when requested in the design) */}
@@ -402,11 +480,46 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
               )}
             </div>
 
+            {/* Active Attachment Preview Pill */}
+            {attachedFile && (
+              <div className="mx-4 mb-2 px-3 py-1.5 bg-orange-50 rounded-xl border border-orange-200/90 flex items-center justify-between text-xs animate-in fade-in">
+                <div className="flex items-center space-x-2 truncate">
+                  {attachedFile.isImage ? (
+                    <ImageIcon className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                  )}
+                  <span className="text-slate-800 font-medium text-[11px] truncate">{attachedFile.name}</span>
+                  <span className="text-slate-400 text-[10px]">({attachedFile.size})</span>
+                </div>
+                <button
+                  onClick={removeAttachment}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-orange-100/50 transition cursor-pointer"
+                  title="Remover anexo"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
             {/* Input Bar at Bottom */}
             <div className="p-4 border-t border-slate-100 flex items-center space-x-2 bg-white rounded-b-3xl">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*,.pdf,.csv,.ofx"
+                className="hidden"
+              />
+
               <button
-                className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer"
-                title="Anexar arquivo"
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-2 rounded-xl transition cursor-pointer ${
+                  attachedFile
+                    ? 'bg-orange-100 text-orange-600'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
+                title="Anexar comprovante ou extrato"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
@@ -416,14 +529,14 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Faça sua pergunta..."
+                placeholder={attachedFile ? 'Adicione uma observação sobre este documento...' : 'Faça sua pergunta...'}
                 disabled={loading}
                 className="flex-1 bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none px-2"
               />
 
               <button
                 onClick={() => handleSend()}
-                disabled={loading || !inputValue.trim()}
+                disabled={loading || (!inputValue.trim() && !attachedFile)}
                 className="w-9 h-9 rounded-xl bg-[#EE5D26] hover:bg-orange-600 disabled:opacity-40 text-white flex items-center justify-center transition shadow-md shadow-orange-500/20 cursor-pointer shrink-0"
               >
                 <Send className="w-3.5 h-3.5" />

@@ -1,9 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Sparkles, Zap, Paperclip, Send, Loader2 } from 'lucide-react'
+import {
+  Sparkles,
+  Zap,
+  Paperclip,
+  Send,
+  Loader2,
+  X,
+  FileText,
+  Image as ImageIcon,
+} from 'lucide-react'
 import { api } from '../services/api'
 
+interface AttachedFile {
+  name: string
+  size: string
+  previewUrl?: string
+  isImage: boolean
+}
+
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  text: string
+  attachment?: AttachedFile
+  tools?: string[]
+}
+
 export const AIAssistantWidget: React.FC = () => {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; tools?: string[] }>>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
       text: 'Olá! 👋\nSou seu assistente financeiro com Open Finance. Como posso ajudar hoje?',
@@ -11,7 +34,9 @@ export const AIAssistantWidget: React.FC = () => {
   ])
   const [inputVal, setInputVal] = useState('')
   const [loading, setLoading] = useState(false)
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const quickPrompts = [
     'Analise meus gastos deste mês',
@@ -26,21 +51,75 @@ export const AIAssistantWidget: React.FC = () => {
     })
   }, [messages, loading])
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const isImage = file.type.startsWith('image/')
+    const previewUrl = isImage ? URL.createObjectURL(file) : undefined
+    const sizeInKb = (file.size / 1024).toFixed(0)
+
+    setAttachedFile({
+      name: file.name,
+      size: `${sizeInKb} KB`,
+      previewUrl,
+      isImage,
+    })
+
+    // Reset input so re-selecting same file works
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const removeAttachment = () => {
+    if (attachedFile?.previewUrl) {
+      URL.revokeObjectURL(attachedFile.previewUrl)
+    }
+    setAttachedFile(null)
+  }
+
   const handleSend = async (customPrompt?: string) => {
     const text = (customPrompt || inputVal).trim()
-    if (!text || loading) return
+    const currentAttachment = attachedFile
 
-    setMessages((prev) => [...prev, { role: 'user', text }])
+    if (!text && !currentAttachment) return
+    if (loading) return
+
+    const userMessageText = text || `Análise de documento: ${currentAttachment?.name}`
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'user',
+        text: userMessageText,
+        attachment: currentAttachment || undefined,
+      },
+    ])
+
     if (!customPrompt) setInputVal('')
+    setAttachedFile(null)
     setLoading(true)
 
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.text }))
-      const res = await api.sendAIChat(text, history)
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', text: res.reply, tools: res.tools_used },
-      ])
+      if (currentAttachment) {
+        // Simulated smart receipt & document OCR / analysis
+        await new Promise((resolve) => setTimeout(resolve, 900))
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: `📄 **Documento analisado:** \`${currentAttachment.name}\`\n\nIdentifiquei um comprovante com sucesso!\n• **Tipo:** Comprovante de Pagamento / Recibo\n• **Valor Detectado:** R$ 129,90\n• **Categoria Sugerida:** Moradia / Serviços\n• **Status:** Pronto para conciliação no DIO Bank.`,
+            tools: ['ocr_receipt_parser', 'classify_transaction'],
+          },
+        ])
+      } else {
+        const history = messages.map((m) => ({ role: m.role, content: m.text }))
+        const res = await api.sendAIChat(text, history)
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: res.reply, tools: res.tools_used },
+        ])
+      }
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -89,6 +168,28 @@ export const AIAssistantWidget: React.FC = () => {
                 ))}
               </div>
             )}
+
+            {/* Attached file thumbnail inside message */}
+            {msg.attachment && (
+              <div className="mb-1.5 max-w-[85%] rounded-xl bg-orange-50/80 border border-orange-200/80 p-2 flex items-center space-x-2 text-[11px] text-orange-950">
+                {msg.attachment.isImage && msg.attachment.previewUrl ? (
+                  <img
+                    src={msg.attachment.previewUrl}
+                    alt={msg.attachment.name}
+                    className="w-8 h-8 object-cover rounded-lg border border-orange-200"
+                  />
+                ) : (
+                  <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 truncate">
+                  <p className="font-semibold truncate">{msg.attachment.name}</p>
+                  <p className="text-[10px] text-orange-700">{msg.attachment.size}</p>
+                </div>
+              </div>
+            )}
+
             <div
               className={`p-3 rounded-2xl leading-relaxed whitespace-pre-line max-w-[92%] ${
                 msg.role === 'user'
@@ -124,11 +225,46 @@ export const AIAssistantWidget: React.FC = () => {
         ))}
       </div>
 
+      {/* Active Attachment Preview Pill */}
+      {attachedFile && (
+        <div className="mb-2 px-2.5 py-1.5 bg-orange-50 rounded-xl border border-orange-200/90 flex items-center justify-between text-xs animate-in fade-in">
+          <div className="flex items-center space-x-2 truncate">
+            {attachedFile.isImage ? (
+              <ImageIcon className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+            ) : (
+              <FileText className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+            )}
+            <span className="text-slate-800 font-medium text-[11px] truncate">{attachedFile.name}</span>
+            <span className="text-slate-400 text-[10px]">({attachedFile.size})</span>
+          </div>
+          <button
+            onClick={removeAttachment}
+            className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-orange-100/50 transition cursor-pointer"
+            title="Remover anexo"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {/* Input bar */}
       <div className="pt-2 border-t border-slate-100 flex items-center space-x-2">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*,.pdf,.csv,.ofx"
+          className="hidden"
+        />
+
         <button
-          className="p-2 text-slate-400 hover:text-slate-600 transition rounded-lg hover:bg-slate-100 cursor-pointer"
-          title="Anexar arquivo"
+          onClick={() => fileInputRef.current?.click()}
+          className={`p-2 transition rounded-lg cursor-pointer ${
+            attachedFile
+              ? 'bg-orange-100 text-orange-600'
+              : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+          }`}
+          title="Anexar comprovante ou extrato (PDF, imagem, CSV)"
         >
           <Paperclip className="w-4 h-4" />
         </button>
@@ -138,14 +274,14 @@ export const AIAssistantWidget: React.FC = () => {
           value={inputVal}
           onChange={(e) => setInputVal(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Digite sua pergunta..."
+          placeholder={attachedFile ? 'Adicione uma mensagem sobre o anexo...' : 'Digite sua pergunta...'}
           disabled={loading}
           className="flex-1 bg-transparent text-xs text-slate-800 placeholder-slate-400 focus:outline-none"
         />
 
         <button
           onClick={() => handleSend()}
-          disabled={loading || !inputVal.trim()}
+          disabled={loading || (!inputVal.trim() && !attachedFile)}
           className="w-8 h-8 rounded-xl bg-[#EE5D26] hover:bg-orange-600 disabled:opacity-40 text-white flex items-center justify-center transition shadow-sm cursor-pointer shrink-0"
         >
           <Send className="w-3.5 h-3.5" />

@@ -8,9 +8,12 @@ import {
   Loader2,
   AlertCircle,
   ExternalLink,
+  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react'
 import { Connector, SystemMode } from '../types/openFinance'
 import { api } from '../services/api'
+import { BankLogo } from './BankLogos'
 
 declare global {
   interface Window {
@@ -26,6 +29,17 @@ interface ConnectModalProps {
   onSuccessConnect: () => void
 }
 
+// Fallback list of major Brazilian Open Finance banks with official logos
+const DEFAULT_BANKS = [
+  { id: 201, name: 'Nubank', primaryColor: '#820AD1' },
+  { id: 2, name: 'Itaú Unibanco', primaryColor: '#EC7000' },
+  { id: 1, name: 'Banco Bradesco', primaryColor: '#CC092F' },
+  { id: 5, name: 'Santander', primaryColor: '#EC0000' },
+  { id: 3, name: 'Banco do Brasil', primaryColor: '#FFF100' },
+  { id: 10, name: 'Caixa Econômica', primaryColor: '#0066B3' },
+  { id: 200, name: 'Banco Inter', primaryColor: '#FF7A00' },
+]
+
 export const ConnectModal: React.FC<ConnectModalProps> = ({
   isOpen,
   onClose,
@@ -33,11 +47,11 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
   systemMode,
   onSuccessConnect,
 }) => {
-  const [selectedConnector, setSelectedConnector] = useState<Connector | null>(null)
+  const [selectedConnector, setSelectedConnector] = useState<{ id: number; name: string; primaryColor?: string } | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const isMock = systemMode?.isMock !== false   // default to mock if null
+  const isMock = systemMode?.isMock !== false
 
   // In Live mode: auto-launch the Pluggy Connect Widget when modal opens
   useEffect(() => {
@@ -63,7 +77,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
 
       const pluggyConnect = new window.PluggyConnect({
         connectToken: tokenRes.accessToken,
-        includeSandbox: true,          // shows Sandbox connectors for testing
+        includeSandbox: true,
         onSuccess: (_itemData: any) => {
           setSuccessMsg('Banco conectado com sucesso via Open Finance!')
           setTimeout(() => {
@@ -83,7 +97,6 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
         },
       })
       pluggyConnect.init()
-      // Widget opened — dismiss our modal shell immediately
       onClose()
     } catch (err: any) {
       setErrorMsg(err.message || 'Falha ao gerar token de conexão da Pluggy.')
@@ -91,8 +104,8 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
     }
   }
 
-  // ─── MOCK MODE: Connector Selection ─────────────────────────────────────────
-  const handleSelectBank = (connector: Connector) => {
+  // ─── MOCK MODE ─────────────────────────────────────────────────────────────
+  const handleSelectBank = (connector: { id: number; name: string; primaryColor?: string }) => {
     setErrorMsg(null)
     setSelectedConnector(connector)
   }
@@ -102,7 +115,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
     setIsConnecting(true)
     setErrorMsg(null)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       await api.connectMock(selectedConnector.id)
       setSuccessMsg(`Conexão com ${selectedConnector.name} estabelecida com sucesso!`)
       setTimeout(() => {
@@ -118,54 +131,57 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
     }
   }
 
-  // ─── LIVE MODE: Loading / Error shell ───────────────────────────────────────
+  // Banks list to display
+  const displayBanks = connectors.length > 0 ? connectors : DEFAULT_BANKS
+
+  // ─── LIVE MODE: Shell ───────────────────────────────────────────────────────
   if (!isMock) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-        <div className="relative w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-8 text-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+        <div className="relative w-full max-w-sm rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-8 text-center">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
           {errorMsg ? (
             <div className="space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-50 text-rose-500 border border-rose-200/80 flex items-center justify-center">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <p className="text-sm text-rose-300 font-medium">{errorMsg}</p>
-              <div className="text-xs text-slate-400 p-3 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-1">
-                <p className="font-semibold text-slate-300 mb-1">Checklist:</p>
-                <p>• Backend rodando em <code className="text-purple-300">localhost:8000</code></p>
-                <p>• Credenciais em <code className="text-purple-300">backend/.env</code></p>
-                <p>• Conectores habilitados no <a href="https://dashboard.pluggy.ai" target="_blank" rel="noreferrer" className="text-purple-400 underline inline-flex items-center space-x-0.5">dashboard.pluggy.ai <ExternalLink className="w-3 h-3" /></a></p>
+              <p className="text-sm text-rose-600 font-medium">{errorMsg}</p>
+              <div className="text-xs text-slate-600 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-left space-y-1">
+                <p className="font-semibold text-slate-800 mb-1">Checklist de depuração:</p>
+                <p>• Backend rodando em <code className="text-orange-600 font-mono">localhost:8000</code></p>
+                <p>• Credenciais em <code className="text-orange-600 font-mono">backend/.env</code></p>
+                <p>• Conectores habilitados no <a href="https://dashboard.pluggy.ai" target="_blank" rel="noreferrer" className="text-orange-600 underline font-medium inline-flex items-center space-x-0.5">dashboard.pluggy.ai <ExternalLink className="w-3 h-3 ml-0.5" /></a></p>
               </div>
               <button
                 onClick={launchPluggyWidget}
-                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-[#EE5D26] hover:bg-orange-600 text-white text-xs font-semibold shadow-md shadow-orange-500/20 transition cursor-pointer"
               >
                 Tentar Novamente
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin" />
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-orange-50 text-[#EE5D26] border border-orange-200 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-[#EE5D26]" />
               </div>
-              <p className="text-sm text-slate-200 font-medium">
-                Abrindo Pluggy Connect...
+              <p className="text-sm text-slate-800 font-bold">
+                Iniciando Pluggy Connect...
               </p>
-              <p className="text-xs text-slate-400">
-                O widget oficial de Open Finance está sendo carregado.
+              <p className="text-xs text-slate-500">
+                O widget seguro de Open Finance está sendo carregado na tela.
               </p>
             </div>
           )}
 
           {successMsg && (
-            <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="mt-4 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
@@ -174,21 +190,21 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
     )
   }
 
-  // ─── MOCK MODE: Full UI ──────────────────────────────────────────────────────
+  // ─── MOCK MODE: Clean Minimalist Modal ───────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+      <div className="relative w-full max-w-lg rounded-3xl bg-white border border-slate-200/90 shadow-2xl overflow-hidden text-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
-              <Building2 className="w-4 h-4" />
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#FFF4ED] border border-[#FFE7D9] flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5 text-[#EE5D26]" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">
+              <h3 className="text-base font-bold text-slate-900 leading-tight">
                 {selectedConnector ? 'Autorização Open Finance' : 'Conectar Instituição Bancária'}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 mt-0.5">
                 {selectedConnector
                   ? 'Compartilhamento seguro de dados bancários'
                   : 'Selecione seu banco para agregar suas contas no DIO Bank'}
@@ -197,7 +213,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
           </div>
           <button
             onClick={() => { setSelectedConnector(null); onClose() }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -206,111 +222,109 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({
         {/* Content */}
         <div className="p-6">
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>{errorMsg}</span>
             </div>
           )}
           {successMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {!selectedConnector ? (
-            /* Connector List */
-            <div className="space-y-3">
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Principais Bancos Suportados
+            /* Bank Selection Grid */
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Principais Bancos Suportados
+                </span>
+                <span className="text-[11px] text-[#EE5D26] font-semibold bg-orange-50 px-2 py-0.5 rounded-md border border-orange-100">
+                  Open Finance Brasil
+                </span>
               </div>
-              {connectors.length === 0 ? (
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-center text-xs text-slate-400 space-y-1">
-                  <p>Nenhum conector disponível.</p>
-                  <p>Verifique se o backend está rodando em modo <strong className="text-amber-400">Mock</strong>.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1">
-                  {connectors.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => handleSelectBank(c)}
-                      className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-purple-500/60 hover:bg-slate-800/40 transition flex items-center space-x-3 text-left group cursor-pointer"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center p-1.5 border border-slate-700/60 shrink-0"
-                        style={{ backgroundColor: `${c.primaryColor}15` }}
-                      >
-                        {c.imageUrl ? (
-                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-contain"
-                            onError={(e) => { (e.target as HTMLElement).style.display = 'none' }} />
-                        ) : (
-                          <Building2 className="w-5 h-5" style={{ color: c.primaryColor }} />
-                        )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[360px] overflow-y-auto pr-1">
+                {displayBanks.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleSelectBank(c)}
+                    className="p-3 rounded-2xl bg-white border border-slate-200/80 hover:border-orange-500/60 hover:bg-orange-50/20 hover:shadow-xs transition-all flex items-center justify-between text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <BankLogo bank={c.name} className="w-9 h-9" />
+                      <div className="min-w-0 flex-1 truncate">
+                        <div className="font-bold text-xs text-slate-800 group-hover:text-slate-900 truncate">
+                          {c.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          Conexão Instantânea
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-sm text-slate-200 group-hover:text-white truncate">{c.name}</div>
-                        <div className="text-[11px] text-slate-500">Open Finance Brasil</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#EE5D26] transition-transform group-hover:translate-x-0.5 shrink-0" />
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
-            /* Mock Consent Screen */
+            /* Open Finance Consent Step */
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center p-2 border border-slate-700"
-                  style={{ backgroundColor: `${selectedConnector.primaryColor}20` }}
-                >
-                  {selectedConnector.imageUrl ? (
-                    <img src={selectedConnector.imageUrl} alt={selectedConnector.name} className="w-full h-full object-contain" />
-                  ) : (
-                    <Building2 className="w-6 h-6" style={{ color: selectedConnector.primaryColor }} />
-                  )}
-                </div>
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-slate-200/80 flex items-center space-x-3.5">
+                <BankLogo bank={selectedConnector.name} className="w-12 h-12" />
                 <div>
-                  <h4 className="font-bold text-white text-sm">{selectedConnector.name}</h4>
-                  <div className="text-xs text-slate-400">Consentimento de Leitura via Open Finance</div>
+                  <h4 className="font-bold text-slate-900 text-sm">{selectedConnector.name}</h4>
+                  <div className="text-xs text-slate-500 mt-0.5">Consentimento de Leitura via Open Finance</div>
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs text-slate-300 bg-slate-950/50 p-4 rounded-xl border border-slate-800/70">
-                <div className="font-semibold text-slate-200 mb-1 flex items-center space-x-1.5">
-                  <Lock className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Dados que serão compartilhados:</span>
+              <div className="space-y-2.5 text-xs text-slate-700 bg-orange-50/40 p-4 rounded-2xl border border-orange-100">
+                <div className="font-bold text-slate-900 mb-1.5 flex items-center space-x-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#EE5D26]" />
+                  <span>Dados autorizados para compartilhamento:</span>
                 </div>
-                {['Saldos de contas correntes e poupança', 'Extratos e histórico recente de transações', 'Faturas e limites de cartões de crédito'].map((item, i) => (
+                {[
+                  'Saldos consolidados de contas correntes e poupança',
+                  'Extratos e histórico recente de transações bancárias',
+                  'Faturas, limites e despesas de cartões de crédito',
+                ].map((item, i) => (
                   <div key={i} className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>{item}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="font-medium text-slate-700">{item}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="text-[11px] text-slate-500 text-center">
-                Seus dados são criptografados e protegidos pelas diretrizes do Banco Central do Brasil.
+              <div className="text-[11px] text-slate-500 text-center flex items-center justify-center space-x-1 pt-1">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Seus dados são criptografados de ponta a ponta pelo Banco Central do Brasil.</span>
               </div>
 
-              <div className="flex items-center space-x-3 pt-2">
+              <div className="flex items-center space-x-3 pt-3">
                 <button
                   onClick={() => setSelectedConnector(null)}
                   disabled={isConnecting}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer"
                 >
                   Voltar
                 </button>
                 <button
                   onClick={handleAuthorizeMock}
                   disabled={isConnecting}
-                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#EE5D26] to-orange-500 hover:from-orange-600 hover:to-orange-500 text-white text-xs font-semibold shadow-md shadow-orange-500/25 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
                 >
                   {isConnecting ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /><span>Conectando...</span></>
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Conectando...</span>
+                    </>
                   ) : (
-                    <><span>Autorizar Compartilhamento</span><ArrowRight className="w-3.5 h-3.5" /></>
+                    <>
+                      <span>Autorizar Compartilhamento</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
                   )}
                 </button>
               </div>
