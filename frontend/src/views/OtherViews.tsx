@@ -1,39 +1,8 @@
 import React from 'react'
-import { Sparkles, Link2, Settings, ArrowLeft } from 'lucide-react'
-import { AIAssistantWidget } from '../components/AIAssistantWidget'
+import { Link2, Settings, ArrowLeft } from 'lucide-react'
 
 interface ViewProps {
   onBackToDashboard: () => void
-}
-
-export const AssistenteView: React.FC<ViewProps> = ({ onBackToDashboard }) => {
-  return (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 flex items-center space-x-2">
-            <Sparkles className="w-6 h-6 text-indigo-500" />
-            <span>Assistente Open Finance MCP</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Converse com seu assistente inteligente e analise suas finanças em linguagem natural.
-          </p>
-        </div>
-
-        <button
-          onClick={onBackToDashboard}
-          className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm transition flex items-center space-x-1.5 cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Dashboard</span>
-        </button>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-2 shadow-sm">
-        <AIAssistantWidget />
-      </div>
-    </div>
-  )
 }
 
 export const ConexoesView: React.FC<ViewProps & { onOpenConnectModal: () => void }> = ({

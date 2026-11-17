@@ -3,7 +3,8 @@ import { Sidebar, NavRoute } from './components/Sidebar'
 import { Header } from './components/Header'
 import { DashboardView } from './views/DashboardView'
 import { ExtratoView } from './views/ExtratoView'
-import { AssistenteView, ConexoesView, ConfiguracoesView } from './views/OtherViews'
+import { AssistenteView } from './views/AssistenteView'
+import { ConexoesView, ConfiguracoesView } from './views/OtherViews'
 import { ConnectModal } from './components/ConnectModal'
 import {
   Account,
