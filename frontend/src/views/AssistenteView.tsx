@@ -41,6 +41,50 @@ interface Message {
   timestamp?: string
 }
 
+interface QuickSummaryData {
+  balance: string
+  income: string
+  expenses: string
+  netFlow: string
+  flowLabel: string
+  progressOffset: number
+}
+
+const QUICK_SUMMARY_DATA: Record<string, QuickSummaryData> = {
+  'Este mês': {
+    balance: 'R$ 4.120,17',
+    income: 'R$ 6.230,00',
+    expenses: 'R$ 4.109,17',
+    netFlow: 'R$ 2.120,83',
+    flowLabel: 'Fluxo do mês',
+    progressOffset: 75.36,
+  },
+  'Mês anterior': {
+    balance: 'R$ 3.840,50',
+    income: 'R$ 5.950,00',
+    expenses: 'R$ 3.890,20',
+    netFlow: 'R$ 2.059,80',
+    flowLabel: 'Fluxo anterior',
+    progressOffset: 87.92,
+  },
+  'Últimos 3 meses': {
+    balance: 'R$ 12.450,80',
+    income: 'R$ 18.420,00',
+    expenses: 'R$ 12.380,50',
+    netFlow: 'R$ 6.039,50',
+    flowLabel: 'Fluxo do período',
+    progressOffset: 82.89,
+  },
+  'Este ano': {
+    balance: 'R$ 43.120,00',
+    income: 'R$ 68.500,00',
+    expenses: 'R$ 42.980,00',
+    netFlow: 'R$ 25.520,00',
+    flowLabel: 'Fluxo anual',
+    progressOffset: 92.94,
+  },
+}
+
 interface AssistenteViewProps {
   onBackToDashboard?: () => void
 }
@@ -69,10 +113,23 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
   const [loading, setLoading] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [likedMap, setLikedMap] = useState<Record<string, boolean | null>>({})
-  const [quickPeriod, setQuickPeriod] = useState('Este mês')
+  const [quickPeriod, setQuickPeriod] = useState<keyof typeof QUICK_SUMMARY_DATA>('Este mês')
+  const [isQuickPeriodOpen, setIsQuickPeriodOpen] = useState(false)
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null)
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const quickPeriodRef = useRef<HTMLDivElement>(null)
+
+  // Click outside to close quick period dropdown
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (quickPeriodRef.current && !quickPeriodRef.current.contains(e.target as Node)) {
+        setIsQuickPeriodOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
 
   useEffect(() => {
     chatScrollRef.current?.scrollTo({
@@ -244,84 +301,122 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
           </div>
 
           {/* Card 2: Resumo rápido */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] relative">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
                 <BarChart2 className="w-4 h-4 text-slate-700" />
                 <h3 className="text-sm font-bold text-slate-800">Resumo rápido</h3>
               </div>
 
-              <button className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-600 bg-slate-50 border border-slate-200/90 rounded-lg hover:bg-slate-100 transition cursor-pointer">
-                <span>{quickPeriod}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-            </div>
+              {/* Period Dropdown */}
+              <div className="relative" ref={quickPeriodRef}>
+                <button
+                  onClick={() => setIsQuickPeriodOpen(!isQuickPeriodOpen)}
+                  className="flex items-center space-x-1 px-2.5 py-1 text-xs text-slate-600 bg-slate-50 border border-slate-200/90 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition cursor-pointer"
+                >
+                  <span>{quickPeriod}</span>
+                  <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isQuickPeriodOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-            <div className="flex items-center justify-between gap-4">
-              {/* Circular Gauge / Donut */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  {/* Background Track */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#F1F5F9"
-                    strokeWidth="10"
-                    fill="none"
-                  />
-                  {/* Progress Indicator */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#EE5D26"
-                    strokeWidth="10"
-                    strokeDasharray="251.2"
-                    strokeDashoffset="75.36" // ~70% progress
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-xs font-bold text-slate-900 tracking-tight">R$ 4.120,17</span>
-                  <span className="text-[10px] text-slate-400 font-medium">Saldo atual</span>
-                </div>
-              </div>
-
-              {/* 3 Metrics list */}
-              <div className="space-y-2.5 text-xs flex-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-emerald-600 font-bold">R$ 6.230,00</span>
+                {isQuickPeriodOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-xl border border-slate-200/90 shadow-xl py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100">
+                    {Object.keys(QUICK_SUMMARY_DATA).map((p) => {
+                      const isSelected = p === quickPeriod
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => {
+                            setQuickPeriod(p as keyof typeof QUICK_SUMMARY_DATA)
+                            setIsQuickPeriodOpen(false)
+                          }}
+                          className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-orange-50/70 text-[#EE5D26] font-semibold'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span>{p}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#EE5D26]" />}
+                        </button>
+                      )
+                    })}
                   </div>
-                  <span className="text-slate-400 text-[11px]">Receitas</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
-                    <span className="text-rose-500 font-bold">R$ 4.109,17</span>
-                  </div>
-                  <span className="text-slate-400 text-[11px]">Despesas</span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <Activity className="w-3.5 h-3.5 text-[#EE5D26]" />
-                    <span className="text-slate-800 font-bold">R$ 2.120,83</span>
-                  </div>
-                  <span className="text-slate-400 text-[11px]">Fluxo do mês</span>
-                </div>
+                )}
               </div>
             </div>
+
+            {(() => {
+              const currentSummary = QUICK_SUMMARY_DATA[quickPeriod] || QUICK_SUMMARY_DATA['Este mês']
+
+              return (
+                <div className="flex items-center justify-between gap-4">
+                  {/* Circular Gauge / Donut */}
+                  <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                      {/* Background Track */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="#F1F5F9"
+                        strokeWidth="10"
+                        fill="none"
+                      />
+                      {/* Progress Indicator */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        stroke="#EE5D26"
+                        strokeWidth="10"
+                        strokeDasharray="251.2"
+                        strokeDashoffset={currentSummary.progressOffset}
+                        strokeLinecap="round"
+                        fill="none"
+                        className="transition-all duration-500 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span className="text-xs font-bold text-slate-900 tracking-tight">{currentSummary.balance}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">Saldo atual</span>
+                    </div>
+                  </div>
+
+                  {/* 3 Metrics list */}
+                  <div className="space-y-2.5 text-xs flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                        <span className="text-emerald-600 font-bold">{currentSummary.income}</span>
+                      </div>
+                      <span className="text-slate-400 text-[11px]">Receitas</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <TrendingDown className="w-3.5 h-3.5 text-rose-500" />
+                        <span className="text-rose-500 font-bold">{currentSummary.expenses}</span>
+                      </div>
+                      <span className="text-slate-400 text-[11px]">Despesas</span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <Activity className="w-3.5 h-3.5 text-[#EE5D26]" />
+                        <span className="text-slate-800 font-bold">{currentSummary.netFlow}</span>
+                      </div>
+                      <span className="text-slate-400 text-[11px]">{currentSummary.flowLabel}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </div>
 
         {/* Right Column: Chat Canvas (~7.5 cols on lg) */}
         <div className="lg:col-span-7 xl:col-span-8">
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[660px]">
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] flex flex-col justify-between h-[580px]">
             {/* Messages Feed */}
             <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-6 space-y-5">
               {messages.map((msg) => {
