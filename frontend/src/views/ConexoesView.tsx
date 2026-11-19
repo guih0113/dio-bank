@@ -294,64 +294,117 @@ export const ConexoesView: React.FC<ConexoesViewProps> = ({
       </div>
 
       {/* Bottom Step-by-Step Card: "Como funciona?" */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-        {/* Left: Info */}
-        <div className="flex items-start space-x-3.5 max-w-sm">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-            <span className="text-base">💡</span>
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col md:flex-row items-stretch">
+        {/* Left Side: Light Gray Background */}
+        <div className="bg-[#F8F9FA] md:w-[38%] p-6 sm:p-7 border-b md:border-b-0 md:border-r border-slate-200/80 flex items-start space-x-3.5">
+          {/* Incandescent Lightbulb Illustration */}
+          <div className="shrink-0 mt-0.5">
+            <svg className="w-7 h-7 select-none" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 2V5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M6 6L8.2 8.2" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M26 6L23.8 8.2" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M2 16H5" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M30 16H27" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M10 15C10 11.6863 12.6863 9 16 9C19.3137 9 22 11.6863 22 15C22 17.5 20.5 19.5 18.5 20.8V22.5C18.5 22.7761 18.2761 23 18 23H14C13.7239 23 13.5 22.7761 13.5 22.5V20.8C11.5 19.5 10 17.5 10 15Z"
+                fill="#FBBF24"
+                stroke="#D97706"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M13 12.5C13.8 11.5 14.8 11 16 11"
+                stroke="#FEF3C7"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path d="M13.5 23.5H18.5V25.5H13.5V23.5Z" fill="#64748B" stroke="#475569" strokeWidth="0.8" />
+              <path d="M14 26H18V27.5C18 28.3284 17.3284 29 16.5 29H15.5C14.6716 29 14 28.3284 14 27.5V26Z" fill="#334155" />
+            </svg>
           </div>
+
           <div>
             <h3 className="text-sm font-bold text-slate-900 tracking-tight">Como funciona?</h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-normal">
               Conecte seus bancos em poucos cliques e tenha suas informações centralizadas.
             </p>
           </div>
         </div>
 
-        {/* Right: 3 Steps */}
-        <div className="flex-1 w-full flex items-center justify-between sm:justify-around gap-2 max-w-2xl">
+        {/* Right Side: Pure White Background with 3 Steps */}
+        <div className="bg-white flex-1 p-6 sm:p-7 flex items-center justify-between sm:justify-around gap-2">
           {/* Step 1 */}
-          <div className="flex flex-col items-center text-center space-y-2">
+          <div className="flex flex-col items-center text-center">
             <div className="relative">
-              <span className="absolute -top-1.5 -right-1 text-[9px] font-bold text-blue-600 bg-blue-50 px-1 rounded">1</span>
-              <div className="w-10 h-10 rounded-full border border-blue-200 bg-blue-50/40 text-blue-600 flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4" />
+              {/* Number Badge */}
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#EFF6FF] text-[#2563EB] font-bold text-[10px] flex items-center justify-center border border-blue-100 shadow-2xs select-none z-10">
+                1
+              </span>
+              {/* Outer Circle */}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-slate-200/80 bg-white flex items-center justify-center shadow-xs">
+                {/* Two-Tone Blue Shield */}
+                <svg className="w-5 h-6 select-none" viewBox="0 0 20 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M10 2L2.5 5.5V11.5C2.5 16.8 5.7 20.8 10 22V2Z"
+                    fill="#3B82F6"
+                    stroke="#0F172A"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M10 2L17.5 5.5V11.5C17.5 16.8 14.3 20.8 10 22V2Z"
+                    fill="#1D4ED8"
+                    stroke="#0F172A"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
             </div>
-            <span className="text-xs font-medium text-slate-700 max-w-[100px] leading-tight">
+            <span className="text-xs font-medium text-slate-700 mt-2.5 whitespace-nowrap">
               Conecte seu banco
             </span>
           </div>
 
-          {/* Arrow */}
-          <span className="text-slate-300 font-bold text-sm">→</span>
+          {/* Thin Right Arrow */}
+          <ArrowRight className="w-4 h-4 text-slate-300 stroke-[1.5] shrink-0 mx-1 sm:mx-2" />
 
           {/* Step 2 */}
-          <div className="flex flex-col items-center text-center space-y-2">
+          <div className="flex flex-col items-center text-center">
             <div className="relative">
-              <span className="absolute -top-1.5 -right-1 text-[9px] font-bold text-blue-600 bg-blue-50 px-1 rounded">2</span>
-              <div className="w-10 h-10 rounded-full border border-blue-200 bg-blue-50/40 text-blue-600 flex items-center justify-center">
-                <RotateCw className="w-4 h-4" />
+              {/* Number Badge */}
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#EFF6FF] text-[#2563EB] font-bold text-[10px] flex items-center justify-center border border-blue-100 shadow-2xs select-none z-10">
+                2
+              </span>
+              {/* Outer Circle */}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-slate-200/80 bg-white flex items-center justify-center shadow-xs">
+                <RotateCw className="w-5 h-5 text-slate-800 stroke-[2.2]" />
               </div>
             </div>
-            <span className="text-xs font-medium text-slate-700 max-w-[120px] leading-tight">
+            <span className="text-xs font-medium text-slate-700 mt-2.5 whitespace-nowrap">
               Aguarde a sincronização
             </span>
           </div>
 
-          {/* Arrow */}
-          <span className="text-slate-300 font-bold text-sm">→</span>
+          {/* Thin Right Arrow */}
+          <ArrowRight className="w-4 h-4 text-slate-300 stroke-[1.5] shrink-0 mx-1 sm:mx-2" />
 
           {/* Step 3 */}
-          <div className="flex flex-col items-center text-center space-y-2">
+          <div className="flex flex-col items-center text-center">
             <div className="relative">
-              <span className="absolute -top-1.5 -right-1 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">3</span>
-              <div className="w-10 h-10 rounded-full bg-emerald-100/70 text-emerald-600 flex items-center justify-center">
-                <Check className="w-4 h-4 stroke-[3]" />
+              {/* Number Badge */}
+              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#EFF6FF] text-[#2563EB] font-bold text-[10px] flex items-center justify-center border border-blue-100 shadow-2xs select-none z-10">
+                3
+              </span>
+              {/* Outer Mint/Green Circle */}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#E8F8EE] flex items-center justify-center">
+                {/* Green Solid Circle with White Checkmark */}
+                <div className="w-6 h-6 rounded-full bg-[#059669] text-white flex items-center justify-center shadow-xs">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
               </div>
             </div>
-            <span className="text-xs font-medium text-slate-700 max-w-[140px] leading-tight">
-              Pronto! Seus dados já estão disponíveis
+            <span className="text-xs font-medium text-slate-700 mt-2.5 leading-tight text-center">
+              Pronto! Seus dados<br />já estão disponíveis
             </span>
           </div>
         </div>
