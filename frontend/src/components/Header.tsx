@@ -45,11 +45,6 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSubmit()
-              }
-            }}
             placeholder="Pergunte ao assistente DIO Bank..."
             className="w-full bg-white border border-slate-200/90 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
           />

@@ -125,6 +125,7 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const quickPeriodRef = useRef<HTMLDivElement>(null)
+  const processedPromptRef = useRef<string | null>(null)
 
   // Click outside to close quick period dropdown
   useEffect(() => {
@@ -241,11 +242,15 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({
     }
   }
 
-  // Handle incoming prompts from global header search bar
+  // Handle incoming prompts from global header search bar (guarded against duplicate execution)
   useEffect(() => {
     if (incomingPrompt && incomingPrompt.trim()) {
+      if (processedPromptRef.current === incomingPrompt) return
+      processedPromptRef.current = incomingPrompt
       handleSend(incomingPrompt.trim())
       onClearIncomingPrompt?.()
+    } else {
+      processedPromptRef.current = null
     }
   }, [incomingPrompt])
 
