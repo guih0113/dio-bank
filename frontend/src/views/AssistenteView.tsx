@@ -87,9 +87,15 @@ const QUICK_SUMMARY_DATA: Record<string, QuickSummaryData> = {
 
 interface AssistenteViewProps {
   onBackToDashboard?: () => void
+  incomingPrompt?: string | null
+  onClearIncomingPrompt?: () => void
 }
 
-export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboard }) => {
+export const AssistenteView: React.FC<AssistenteViewProps> = ({
+  onBackToDashboard,
+  incomingPrompt,
+  onClearIncomingPrompt,
+}) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'msg-1',
@@ -234,6 +240,14 @@ export const AssistenteView: React.FC<AssistenteViewProps> = ({ onBackToDashboar
       setLoading(false)
     }
   }
+
+  // Handle incoming prompts from global header search bar
+  useEffect(() => {
+    if (incomingPrompt && incomingPrompt.trim()) {
+      handleSend(incomingPrompt.trim())
+      onClearIncomingPrompt?.()
+    }
+  }, [incomingPrompt])
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text)

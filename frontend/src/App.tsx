@@ -20,6 +20,7 @@ import { api } from './services/api'
 export function App() {
   const [currentRoute, setCurrentRoute] = useState<NavRoute>('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
+  const [incomingAssistantPrompt, setIncomingAssistantPrompt] = useState<string | null>(null)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false)
 
@@ -69,6 +70,12 @@ export function App() {
     setIsMockMode((prev) => !prev)
   }
 
+  const handleSendToAssistant = (prompt: string) => {
+    if (!prompt.trim()) return
+    setIncomingAssistantPrompt(prompt.trim())
+    setCurrentRoute('assistente')
+  }
+
   return (
     <div className="min-h-screen bg-[#F4F5F9] text-slate-800 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Fixed Left Sidebar */}
@@ -87,6 +94,7 @@ export function App() {
         <Header
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onSendToAssistant={handleSendToAssistant}
           onToggleMobileMenu={() => setIsMobileOpen((prev) => !prev)}
         />
 
@@ -104,7 +112,11 @@ export function App() {
           )}
 
           {currentRoute === 'assistente' && (
-            <AssistenteView onBackToDashboard={() => setCurrentRoute('dashboard')} />
+            <AssistenteView
+              onBackToDashboard={() => setCurrentRoute('dashboard')}
+              incomingPrompt={incomingAssistantPrompt}
+              onClearIncomingPrompt={() => setIncomingAssistantPrompt(null)}
+            />
           )}
 
           {currentRoute === 'conexoes' && (
