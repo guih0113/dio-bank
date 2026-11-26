@@ -82,8 +82,6 @@ export function App() {
       <Sidebar
         currentRoute={currentRoute}
         onNavigate={setCurrentRoute}
-        isMockMode={isMockMode}
-        onToggleMockMode={toggleMockMode}
         isMobileOpen={isMobileOpen}
         onCloseMobile={() => setIsMobileOpen(false)}
       />

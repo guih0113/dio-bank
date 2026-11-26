@@ -13,8 +13,6 @@ export type NavRoute = 'dashboard' | 'extrato' | 'assistente' | 'conexoes' | 'co
 interface SidebarProps {
   currentRoute: NavRoute
   onNavigate: (route: NavRoute) => void
-  isMockMode: boolean
-  onToggleMockMode: () => void
   isMobileOpen?: boolean
   onCloseMobile?: () => void
 }
@@ -22,8 +20,6 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   currentRoute,
   onNavigate,
-  isMockMode,
-  onToggleMockMode,
   isMobileOpen = false,
   onCloseMobile,
 }) => {
@@ -107,35 +103,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Bottom Section */}
-        <div className="p-5 border-t border-[#1C1F26] relative z-10 space-y-4">
-          {/* Mock Mode Switch */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <span className={`w-2 h-2 rounded-full ${isMockMode ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-                <span className="text-xs font-semibold text-white">Modo Mock</span>
-              </div>
-              <p className="text-[10px] text-slate-400 mt-0.5">Usando dados de exemplo</p>
-            </div>
-
-            {/* Toggle switch */}
-            <button
-              onClick={onToggleMockMode}
-              className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center cursor-pointer ${
-                isMockMode ? 'bg-[#EE5D26]' : 'bg-slate-700'
-              }`}
-              title="Alternar entre modo Mock e Live"
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
-                  isMockMode ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-
+        <div className="p-5 border-t border-[#1C1F26] relative z-10">
           {/* User Profile */}
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-full bg-slate-300 text-slate-900 font-bold text-xs flex items-center justify-center shrink-0">
                 GH
