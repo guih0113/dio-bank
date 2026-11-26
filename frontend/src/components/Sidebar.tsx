@@ -4,11 +4,10 @@ import {
   FileText,
   Sparkles,
   Link2,
-  Settings,
   ChevronDown,
 } from 'lucide-react'
 
-export type NavRoute = 'dashboard' | 'extrato' | 'assistente' | 'conexoes' | 'configuracoes'
+export type NavRoute = 'dashboard' | 'extrato' | 'assistente' | 'conexoes'
 
 interface SidebarProps {
   currentRoute: NavRoute
@@ -28,7 +27,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'extrato' as NavRoute, label: 'Extrato', icon: FileText },
     { id: 'assistente' as NavRoute, label: 'Assistente', icon: Sparkles },
     { id: 'conexoes' as NavRoute, label: 'Conexões', icon: Link2 },
-    { id: 'configuracoes' as NavRoute, label: 'Configurações', icon: Settings },
   ]
 
   return (

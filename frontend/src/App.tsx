@@ -5,7 +5,6 @@ import { DashboardView } from './views/DashboardView'
 import { ExtratoView } from './views/ExtratoView'
 import { AssistenteView } from './views/AssistenteView'
 import { ConexoesView } from './views/ConexoesView'
-import { ConfiguracoesView } from './views/OtherViews'
 import { ConnectModal } from './components/ConnectModal'
 import {
   Account,
@@ -122,10 +121,6 @@ export function App() {
               onBackToDashboard={() => setCurrentRoute('dashboard')}
               onOpenConnectModal={() => setIsConnectModalOpen(true)}
             />
-          )}
-
-          {currentRoute === 'configuracoes' && (
-            <ConfiguracoesView onBackToDashboard={() => setCurrentRoute('dashboard')} />
           )}
         </main>
       </div>
